@@ -1,0 +1,11 @@
+import * as mupdf from 'mupdf';
+import { readFileSync, writeFileSync } from 'fs';
+const data = readFileSync(process.env.HOME + '/Downloads/Broken.pdf');
+const doc = mupdf.Document.openDocument(new Uint8Array(data), 'application/pdf');
+console.log('pages:', doc.countPages(), '| isPDF:', doc.isPDF());
+const pdf = doc.asPDF();
+console.log('version:', pdf.getVersion(), '| wasRepaired:', pdf.wasRepaired());
+const out = pdf.saveToBuffer('compress,garbage=4,clean').asUint8Array();
+console.log('orig bytes:', data.length, '| out bytes:', out.length);
+writeFileSync('/tmp/mupdf-fixed.pdf', out);
+console.log('wrote /tmp/mupdf-fixed.pdf');
