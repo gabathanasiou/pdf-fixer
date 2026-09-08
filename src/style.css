@@ -43,14 +43,16 @@ body {
 
 header h1 {
   margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.2;
+  font-size: clamp(1.9rem, 7.5vw, 2.4rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .sub {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
-  font-size: 1rem;
+  font-size: clamp(1.05rem, 4.2vw, 1.2rem);
+  line-height: 1.5;
 }
 
 .drop {
@@ -61,8 +63,8 @@ header h1 {
   background: var(--card);
   border: 2px dashed var(--muted);
   border-radius: 20px;
-  padding: 28px 20px;
-  min-height: 220px;
+  padding: 32px 20px;
+  min-height: 260px;
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -85,22 +87,23 @@ header h1 {
 }
 
 .drop-icon {
-  font-size: 3rem;
+  font-size: clamp(3rem, 14vw, 4.2rem);
   line-height: 1;
   color: var(--accent);
 }
 
 .drop-title {
-  margin: 12px 0 4px;
+  margin: 14px 0 6px;
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: clamp(1.4rem, 6vw, 1.8rem);
 }
 
 .drop-sub {
   margin: 0;
   color: var(--muted);
-  font-size: 1rem;
-  max-width: 30ch;
+  font-size: clamp(1rem, 4vw, 1.12rem);
+  line-height: 1.5;
+  max-width: 34ch;
 }
 
 .auto {
@@ -112,7 +115,7 @@ header h1 {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
-  font-size: 1rem;
+  font-size: clamp(1.02rem, 4vw, 1.1rem);
   cursor: pointer;
 }
 
@@ -132,8 +135,8 @@ header h1 {
 .row {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 16px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -162,6 +165,7 @@ header h1 {
 
 .row-name {
   font-weight: 600;
+  font-size: 1rem;
   word-break: break-word;
   overflow-wrap: anywhere;
   min-width: 0;
@@ -169,12 +173,12 @@ header h1 {
 
 .badge {
   flex: none;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   white-space: nowrap;
 }
 
@@ -195,11 +199,11 @@ header h1 {
 
 .row-meta {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .progress {
-  height: 8px;
+  height: 10px;
   border-radius: 999px;
   background: #ece9e0;
   overflow: hidden;
@@ -216,11 +220,11 @@ header h1 {
 .dl {
   display: block;
   text-align: center;
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   text-decoration: none;
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 16px 18px;
   background: var(--accent);
   color: var(--accent-ink);
   -webkit-user-select: none;
@@ -234,7 +238,7 @@ header h1 {
 .privacy {
   margin: 2px 0 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.8;
   flex: none;
 }
