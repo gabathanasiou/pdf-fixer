@@ -8,6 +8,7 @@ import { HistoryList } from './components/history-list'
 import { InfoDialog } from './components/info-dialog'
 import { Intro } from './components/intro'
 import { ResultList } from './components/result-list'
+import { SoundDebug } from './components/sound-debug'
 import { applyStatic, getLang, onLangChange, t } from './i18n'
 import { triggerDownload } from './lib/download'
 import { el } from './lib/dom'
@@ -126,5 +127,7 @@ function record(entry: {
   currentIds.add(id)
   return addHistory({ ...entry, id, kind: 'fixed', createdAt: Date.now() }).catch(() => {})
 }
+
+if (import.meta.env.DEV) document.body.append(SoundDebug())
 
 window.__pdfFixerReady = true

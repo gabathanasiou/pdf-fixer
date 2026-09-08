@@ -1,5 +1,6 @@
 import { t } from '../i18n'
 import { el } from '../lib/dom'
+import { tap, tick } from '../lib/sound'
 
 export interface ExpiredDialog {
   el: HTMLElement
@@ -22,7 +23,12 @@ export function ExpiredDialog(): ExpiredDialog {
     class: 'pill-btn',
     text: t('ok'),
     attrs: { type: 'button', 'data-i18n': 'ok' },
-    on: { click: () => close() },
+    on: {
+      click: () => {
+        tap()
+        close()
+      },
+    },
   })
 
   const dialog = el(
@@ -45,7 +51,10 @@ export function ExpiredDialog(): ExpiredDialog {
       attrs: { hidden: '' },
       on: {
         click: (event) => {
-          if (event.target === overlay) close()
+          if (event.target === overlay) {
+            tick()
+            close()
+          }
         },
       },
     },

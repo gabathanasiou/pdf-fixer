@@ -1,5 +1,6 @@
 import { t } from '../i18n'
 import { el } from '../lib/dom'
+import { flip } from '../lib/sound'
 
 const AUTO_KEY = 'pdf-fixer:auto-download'
 
@@ -18,6 +19,7 @@ export function AutoDownload(): AutoDownloadToggle {
   }
 
   input.addEventListener('change', () => {
+    flip(input.checked)
     try {
       localStorage.setItem(AUTO_KEY, input.checked ? '1' : '0')
     } catch {

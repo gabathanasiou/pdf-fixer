@@ -1,6 +1,6 @@
 import { t } from '../i18n'
 import { el } from '../lib/dom'
-import { lead } from '../lib/sound'
+import { lead, tick } from '../lib/sound'
 
 export type FilesHandler = (files: FileList | Iterable<File>) => void
 
@@ -52,7 +52,10 @@ export function DropZone(onFiles: FilesHandler): HTMLElement {
           event.preventDefault()
           const zone = event.currentTarget as HTMLElement
           zone.classList.remove('hover')
-          if (event.dataTransfer) onFiles(event.dataTransfer.files)
+          if (event.dataTransfer) {
+            tick()
+            onFiles(event.dataTransfer.files)
+          }
         },
       },
     },

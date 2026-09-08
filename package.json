@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "smoke": "node scripts/smoke.mjs",
+    "sound": "node scripts/sound-test.mjs",
     "og": "node scripts/og-image.mjs"
   },
   "dependencies": {

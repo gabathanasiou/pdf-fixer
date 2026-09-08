@@ -1,6 +1,7 @@
 import { t } from '../i18n'
 import { el } from '../lib/dom'
 import { closeIcon } from '../lib/icons'
+import { tick } from '../lib/sound'
 
 export interface InfoDialog {
   el: HTMLElement
@@ -27,7 +28,7 @@ export function InfoDialog(): InfoDialog {
     {
       class: 'icon-btn info-close',
       attrs: { type: 'button', 'data-i18n-aria': 'infoClose', 'aria-label': t('infoClose') },
-      on: { click: () => close() },
+      on: { click: () => { tick(); close() } },
     },
     [closeIcon()],
   )
@@ -73,7 +74,10 @@ export function InfoDialog(): InfoDialog {
       attrs: { hidden: '' },
       on: {
         click: (event) => {
-          if (event.target === overlay) close()
+          if (event.target === overlay) {
+            tick()
+            close()
+          }
         },
       },
     },

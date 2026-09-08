@@ -910,3 +910,61 @@ body.info-open {
     --leaf: #a8e6c4;
   }
 }
+
+.sfx-debug {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9999;
+  width: min(320px, calc(100vw - 24px));
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(24, 18, 38, 0.92);
+  color: #f2ecff;
+  font: 500 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.sfx-debug-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sfx-debug-title {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sfx-debug-readout {
+  color: #cbb7e8;
+  font-size: 11px;
+}
+
+.sfx-debug-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.sfx-debug-btn {
+  padding: 6px 4px;
+  border: 1px solid #52456f;
+  border-radius: 8px;
+  background: #2a2140;
+  color: #f2ecff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sfx-debug-btn:hover {
+  background: #3b3055;
+}
+
+.sfx-debug-btn.reset {
+  grid-column: 1 / -1;
+  background: #4a3a6e;
+}

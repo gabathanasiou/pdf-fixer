@@ -1,5 +1,6 @@
 import { t } from '../i18n'
 import { el } from '../lib/dom'
+import { tap, tick } from '../lib/sound'
 
 export interface ConfirmDialog {
   el: HTMLElement
@@ -23,7 +24,7 @@ export function ConfirmDialog(): ConfirmDialog {
     class: 'pill-btn',
     text: t('cancel'),
     attrs: { type: 'button', 'data-i18n': 'cancel' },
-    on: { click: () => close() },
+    on: { click: () => { tick(); close() } },
   })
   const confirm = el('button', {
     class: 'pill-btn danger',
@@ -31,6 +32,7 @@ export function ConfirmDialog(): ConfirmDialog {
     attrs: { type: 'button', 'data-i18n': 'confirmDelete' },
     on: {
       click: () => {
+        tap()
         const run = action
         close()
         run?.()
@@ -58,7 +60,10 @@ export function ConfirmDialog(): ConfirmDialog {
       attrs: { hidden: '' },
       on: {
         click: (event) => {
-          if (event.target === overlay) close()
+          if (event.target === overlay) {
+            tick()
+            close()
+          }
         },
       },
     },

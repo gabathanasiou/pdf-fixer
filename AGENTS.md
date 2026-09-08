@@ -12,6 +12,10 @@ file before changing code; deeper manuals live in `docs/`.
   the only static gate.
 - `npm run smoke` - Node-level MuPDF check on `~/Downloads/Broken.pdf`
   (`scripts/smoke.mjs`); writes `/tmp/mupdf-fixed.pdf`.
+- **`npm run sound`** - SFX check (`scripts/sound-test.mjs`, Playwright against
+  `dist/`): asserts the global I-IV-V (octave-up) progression, result advance, and cursor. Needs a
+  build first. `window.__pdfFixerSound` + a dev-only panel (`sound-debug.ts`) let
+  you trigger voices manually.
 - **`npm run build && node scripts/e2e.mjs`** - browser check (Playwright,
   headless Chromium) against `dist/`; serves `dist/` on `:4783` via python3,
   uploads `~/Downloads/Broken.pdf`, saves `scripts/webapp-fixed.pdf`. Requires a
@@ -113,21 +117,21 @@ file before changing code; deeper manuals live in `docs/`.
 ```
 index.html                     shell: SEO head + <main id="app"> mount point
 src/main.ts                    composition root + file to repair to row flow
-src/components/                header, intro, drop-zone, auto-download, result-list, result-row, history-list, info-dialog
+src/components/                header, intro, drop-zone, auto-download, result-list, result-row, history-list, info-dialog, sound-debug
 src/lib/dom.ts                 el() element factory (the only DOM builder)
 src/lib/repair.ts              MuPDF repair (pure, discriminated union result)
 src/lib/download.ts            outputName() / triggerDownload()
 src/lib/confetti.ts            radial celebration burst on completion
 src/lib/history.ts             IndexedDB store for the Recent repairs (cap 5 blobs)
 src/lib/press.ts               press animation + harmonious tap SFX
-src/lib/sound.ts               synthesized Web Audio SFX + mute pref
+src/lib/sound.ts               synthesized Web Audio SFX (one global I-IV-V progression) + mute pref
 src/lib/flags.ts               inline SVG flag data URIs (el, en) + otherLang()
 src/lib/icons.ts               inline SVG icons (close, document)
 src/i18n.ts                    el/en catalogs, t(), setLang(), applyStatic()
 src/style.css                  styles + dark mode + info modal + flag swap + two-column layout
 public/                        SEO assets (robots, sitemap, manifest, 404, images)
 netlify.toml                   Netlify build + headers
-scripts/{smoke,e2e,og-image}.mjs  Node, Playwright e2e, asset generation
+scripts/{smoke,e2e,sound-test,og-image}.mjs  Node, Playwright e2e + SFX checks, asset generation
 ```
 
 ## Docs
@@ -136,8 +140,8 @@ scripts/{smoke,e2e,og-image}.mjs  Node, Playwright e2e, asset generation
   adding/moving UI or wiring state.
 - `docs/I18N.md` - locales, `t()`/`data-i18n`, adding a language. Read before
   touching any user-facing string.
-- `docs/SOUND.md` - the synthesized SFX and the I-IV-V / per-card harmony model.
-  Read before changing audio or reusing it elsewhere.
+- `docs/SOUND.md` - the synthesized SFX, the one global I-IV-V (octave-up) progression, and how
+  every voice advances the cursor. Read before changing audio or reusing it elsewhere.
 - Doc budget: `AGENTS.md` stays under ~200 lines (loaded every session);
   `docs/*.md` under ~200. Prefer `file:line` pointers over prose; move detail
   out, never append.
@@ -146,8 +150,9 @@ scripts/{smoke,e2e,og-image}.mjs  Node, Playwright e2e, asset generation
 
 1. `npx tsc --noEmit` - passes.
 2. `npm run build` - succeeds.
-3. `node scripts/e2e.mjs` - for behavior/UI changes; result row reaches
+3. `npm run sound` - for audio changes; progression, result, and cursor checks pass.
+4. `node scripts/e2e.mjs` - for behavior/UI changes; result row reaches
    `.badge.ok`/`.badge.clean`, no `.badge.err`, no page errors.
-4. Manual: toggle EN/ΕΛ (copy, flag, and `<html lang>` change, existing rows
+5. Manual: toggle EN/ΕΛ (copy, flag, and `<html lang>` change, existing rows
    re-translate), open the info dialog and switch language inside it, process a
    PDF, confirm the download link works, reload to confirm the language persists.

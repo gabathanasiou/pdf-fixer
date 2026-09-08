@@ -65,17 +65,39 @@ function tone(
   osc.stop(start + dur + 0.05)
 }
 
-const SCALE = [0, 2, 4, 5, 7, 9, 11]
 const ROOT = 261.63
-const PROGRESSION = [0, 5, 7]
-let step = 0
-let progression = 0
-let lastRoot = 0
 
-function nextRoot(): number {
-  const semitones = SCALE[step % SCALE.length]
-  step = (step + 1) % SCALE.length
-  return ROOT * Math.pow(2, semitones / 12)
+interface Chord {
+  root: number
+  third: number
+}
+
+// I - IV - V in C, then the same an octave up (6-step loop)
+const PROGRESSION: Chord[] = [
+  { root: 0, third: 4 }, // I  C
+  { root: 5, third: 4 }, // IV F
+  { root: 7, third: 4 }, // V  G
+  { root: 12, third: 4 }, // I  C'
+  { root: 17, third: 4 }, // IV F'
+  { root: 19, third: 4 }, // V  G'
+]
+
+let cursor = 0
+let lastChord: Chord = PROGRESSION[0]
+
+function advance(): void {
+  cursor = (cursor + 1) % PROGRESSION.length
+}
+
+function nextChord(): Chord {
+  const chord = PROGRESSION[cursor]
+  lastChord = chord
+  advance()
+  return chord
+}
+
+function currentChord(): Chord {
+  return PROGRESSION[cursor]
 }
 
 function rootOf(semitones: number): number {
@@ -102,54 +124,66 @@ export function toggleSound(): boolean {
 }
 
 export function pop(): void {
-  const root = nextRoot()
+  const chord = nextChord()
+  const root = rootOf(chord.root)
   tone(note(root, 0), 0, 0.09, 'sine', 0.05)
   tone(note(root, 7), 0.05, 0.1, 'sine', 0.04)
 }
 
 export function chord(): void {
-  const degree = PROGRESSION[progression % PROGRESSION.length]
-  progression += 1
-  lastRoot = degree
-  const root = rootOf(degree)
+  const current = nextChord()
+  const root = rootOf(current.root)
   tone(note(root, 0), 0, 0.3, 'sine', 0.05)
-  tone(note(root, 4), 0, 0.3, 'sine', 0.045)
+  tone(note(root, current.third), 0, 0.3, 'sine', 0.045)
   tone(note(root, 7), 0, 0.3, 'sine', 0.045)
 }
 
 export function lead(): void {
-  const degree = PROGRESSION[progression % PROGRESSION.length]
-  tone(note(rootOf(degree), 7), 0, 0.28, 'sine', 0.035)
+  const chord = currentChord()
+  tone(note(rootOf(chord.root), 7), 0, 0.28, 'sine', 0.035)
 }
 
 export function tick(): void {
-  tone(nextRoot(), 0, 0.05, 'sine', 0.03)
+  const chord = nextChord()
+  tone(rootOf(chord.root), 0, 0.05, 'sine', 0.03)
 }
 
 export function tap(): void {
-  const root = nextRoot()
-  tone(note(root, 0), 0, 0.09, 'sine', 0.055)
-  tone(note(root, 7), 0.045, 0.14, 'sine', 0.05)
+  const chord = nextChord()
+  const root = rootOf(chord.root)
+  tone(note(root, 0), 0, 0.1, 'sine', 0.05)
+  tone(note(root, 7), 0, 0.1, 'sine', 0.04)
+}
+
+export function flip(on: boolean): void {
+  const chord = nextChord()
+  const root = rootOf(chord.root)
+  const [first, second] = on ? [0, 7] : [7, 0]
+  tone(note(root, first), 0, 0.09, 'sine', 0.055)
+  tone(note(root, second), 0.045, 0.14, 'sine', 0.05)
 }
 
 export function success(): void {
-  const root = rootOf(lastRoot)
-  for (const semitones of [0, 4, 7]) tone(note(root, semitones), 0, 0.2, 'sine', 0.045)
+  const chord = nextChord()
+  const root = rootOf(chord.root)
+  for (const semitones of [0, chord.third, 7])
+    tone(note(root, semitones), 0, 0.2, 'sine', 0.045)
 
-  const arp = [0, 4, 7, 12, 16, 19]
+  const arp = [0, chord.third, 7, 12, 12 + chord.third, 19]
   arp.forEach((semitones, index) =>
     tone(note(root, semitones), 0.18 + index * 0.06, 0.14, 'sine', 0.045),
   )
 
   const end = 0.18 + arp.length * 0.06
-  for (const semitones of [0, 4, 7, 12]) {
+  for (const semitones of [0, chord.third, 7, 12]) {
     tone(note(root, semitones), end, 0.8, 'sine', 0.04)
   }
 }
 
 export function clean(): void {
-  const root = rootOf(lastRoot)
-  const melody = [7, 4, 0]
+  const chord = nextChord()
+  const root = rootOf(chord.root)
+  const melody = [7, chord.third, 0]
   melody.forEach((semitones, index) => {
     const last = index === melody.length - 1
     tone(note(root, semitones), index * 0.18, last ? 0.5 : 0.18, 'sine', 0.045)
@@ -157,7 +191,96 @@ export function clean(): void {
 }
 
 export function error(): void {
-  const root = nextRoot()
+  const chord = nextChord()
+  const root = rootOf(chord.root)
   tone(note(root, 7), 0, 0.16, 'triangle', 0.05)
-  tone(note(root, 4), 0.09, 0.22, 'triangle', 0.045)
+  tone(note(root, chord.third), 0.09, 0.22, 'triangle', 0.045)
 }
+
+export type Voice =
+  | 'tap'
+  | 'tick'
+  | 'pop'
+  | 'flipOn'
+  | 'flipOff'
+  | 'lead'
+  | 'chord'
+  | 'success'
+  | 'clean'
+  | 'error'
+
+export interface SoundState {
+  cursor: number
+  current: Chord
+  last: Chord
+  enabled: boolean
+}
+
+export interface SoundDebugApi {
+  progression: readonly Chord[]
+  voices: readonly Voice[]
+  state(): SoundState
+  play(voice: Voice): void
+  reset(): void
+}
+
+const VOICES: Voice[] = [
+  'tap',
+  'tick',
+  'pop',
+  'flipOn',
+  'flipOff',
+  'lead',
+  'chord',
+  'success',
+  'clean',
+  'error',
+]
+
+function play(voice: Voice): void {
+  switch (voice) {
+    case 'tap':
+      tap()
+      return
+    case 'tick':
+      tick()
+      return
+    case 'pop':
+      pop()
+      return
+    case 'flipOn':
+      flip(true)
+      return
+    case 'flipOff':
+      flip(false)
+      return
+    case 'lead':
+      lead()
+      return
+    case 'chord':
+      chord()
+      return
+    case 'success':
+      success()
+      return
+    case 'clean':
+      clean()
+      return
+    case 'error':
+      error()
+      return
+  }
+}
+
+export const soundDebug: SoundDebugApi = {
+  progression: PROGRESSION,
+  voices: VOICES,
+  state: () => ({ cursor, current: currentChord(), last: lastChord, enabled }),
+  play,
+  reset: () => {
+    cursor = 0
+    lastChord = PROGRESSION[0]
+  },
+}
+
+window.__pdfFixerSound = soundDebug

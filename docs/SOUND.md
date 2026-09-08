@@ -6,21 +6,18 @@ Status: read before changing any SFX, or before lifting this into another projec
 
 1. **Everything is synthesized at runtime** with the Web Audio API. No audio files,
    no network requests, no dependencies (`src/lib/sound.ts`).
-2. **One key ties the app together.** Add-card chords walk a `I -> IV -> V`
-   progression in C major; every result jingle replays the *same chord* as the
-   card that spawned it, so the UI sounds like a single song rather than random
-   beeps.
-3. **Audio is polite.** It unlocks on the first user gesture, can be muted, and
-   the mute preference is persisted in `pdf-fixer:sound`.
+2. **One global cursor ties the app together.** Every interaction advances a single
+   position in one chord progression; the whole UI plays one continuous piece.
+3. **Every voice plays the next step.** `nextChord()` hands out the current chord and
+   advances, so any interaction (card, tap, checkbox, result) moves the progression
+   forward and never repeats a pitch until the 6-step loop wraps.
+4. **Audio is polite.** It unlocks on the first user gesture, can be muted, and the
+   mute preference is persisted in `pdf-fixer:sound`.
 
 ## Pitch system (the reusable core)
 
-- `ROOT = 261.63` (C4) and `SCALE = [0, 2, 4, 5, 7, 9, 11]` (major scale
-  semitones).
-- `rootOf(semitones)` returns a frequency by equal temperament:
-  `ROOT * 2 ** (semitones / 12)`.
-- `note(root, semitones)` transposes an existing root by an interval.
-- `nextRoot()` cycles the scale for incidental sounds.
+- `ROOT = 261.63` (C4); `rootOf(semitones) = ROOT * 2 ** (semitones / 12)`;
+  `note(root, semitones)` transposes an existing root by an interval.
 - `tone(freq, at, dur, type, peak)` is the synth voice: one oscillator with a
   ~15ms attack and an exponential decay (that decay *is* the "ease out").
 
@@ -35,58 +32,72 @@ function tone(freq, at, dur, type = 'sine', peak = 0.05) {
   gain.gain.setValueAtTime(0.0001, start)
   gain.gain.exponentialRampToValueAtTime(peak, start + 0.015)
   gain.gain.exponentialRampToValueAtTime(0.0001, start + dur)
-  osc.connect(gain).connect(ac.destination)
+  osc.connect(gain).connect(output(ac))
   osc.start(start)
   osc.stop(start + dur + 0.05)
 }
 ```
 
-## The musical relationships
+## The progression
 
-- **Add-card chord**: `PROGRESSION = [0, 5, 7]` (I, IV, V in C major). Each
-  `chord()` takes the next degree, stores it in `lastRoot`, and plays a major
-  triad (root, +4, +7). Consecutive cards are therefore *different but consonant*
-  (a real I-IV-V progression).
-- **Result jingle**: `success()` and `clean()` read `lastRoot`, so they play the
-  exact chord of the card that just finished. This is the trick that makes the
-  result "harmonize" with the add-card instead of clashing.
-- **Success shape**: opening chord, then a 6-note arpeggio `[0, 4, 7, 12, 16,
-  19]`, then a closing chord held with the exponential ease-out.
-- **Clean shape**: a softer sibling of success, just three descending triad tones
-  (5th, 3rd, root) with the last held.
-- **Incidental sounds** (`pop`, `tick`, `error`) cycle the scale via `nextRoot()`
-  so they are musical but independent of the card key.
-- **Lead-in**: pressing the drop zone plays the fifth of the *upcoming* add-card
-  chord (`lead()` peeks at the progression without advancing), so the picker
-  "asks" and the chord "answers".
+I - IV - V in C, then the same an octave higher:
 
-## Worked example
+```ts
+const PROGRESSION = [
+  { root: 0, third: 4 },  // I  C
+  { root: 5, third: 4 },  // IV F
+  { root: 7, third: 4 },  // V  G
+  { root: 12, third: 4 }, // I  C'
+  { root: 17, third: 4 }, // IV F'
+  { root: 19, third: 4 }, // V  G'
+]
+```
 
-| Card | Add-card chord | Result jingle (same root) |
+- `third` is 4 for major, 3 for minor; roots > 11 are the same chords an octave up.
+- `nextChord()` returns the current step, records it in `lastChord`, and advances
+  `cursor` (mod length). The 6-step loop rises an octave, then drops back to C.
+- `currentChord()` peeks without advancing (used by `lead()`).
+- `lastChord` is simply the most recently played chord (shown in the debug panel).
+
+## Voices
+
+| fn | shape | advances cursor |
 |---|---|---|
-| 1 | I: C-E-G | C-E-G (success), G-E-C (clean) |
-| 2 | IV: F-A-C | F-A-C |
-| 3 | V: G-B-D | G-B-D |
+| `chord()` | triad (+7th) on `nextChord()` | yes |
+| `success()` | opening chord, arpeggio `[0, third, 7, 12, +third, 19]`, held chord | yes |
+| `clean()` | descending `[5th, third, root]` | yes |
+| `error()` | descending triangle `[5th, third]` | yes |
+| `tap()` | root + fifth together, short (default "anything interactable") | yes |
+| `tick()` | single root note, short | yes |
+| `pop()` | two-note blip (played when sound is enabled) | yes |
+| `flip(on)` | on: root→fifth; off: fifth→root (checkbox) | yes |
+| `lead()` | fifth of `currentChord()`, no advance (drop-zone "ask") | no |
 
-Each add-card is consonant with the previous one, and each result is consonant
-with its own add-card.
+Every voice except `lead()` calls `nextChord()`, so the pitch changes on every
+interaction. Result voices only differ in shape (arpeggio / descending / triangle).
 
-## Reuse recipe (other projects)
+Every interactable routes through this module: add-card (`result-list.ts`),
+result (`result-row.ts`), download links, header info/lang, sound toggle,
+auto-download checkbox (`flip`), drop zone (`lead`/`tick`), history buttons
+(`press()` → `tap()`), and every dialog button/backdrop (`tick`/`tap`).
 
-1. Copy `src/lib/sound.ts`; it has zero imports and only touches the Web Audio API.
-2. Keep `ROOT`, `SCALE`, `rootOf`, `note`, `tone` as the synth core.
-3. Define your own `PROGRESSION` (any semitone sequence) for the "entry" sound
-   and store the chosen degree. Have the "result" sound read that stored degree
-   so the two always match.
-4. Unlock the `AudioContext` on the first `pointerdown`/`keydown` (browsers block
-   autoplay otherwise) and gate every play on a persisted mute flag.
-5. Keep the visual counterpart (confetti, pop) separate and respect
-   `prefers-reduced-motion` for it; the audio is unaffected.
+## Debug & test
+
+- `window.__pdfFixerSound` is always attached (`src/lib/sound.ts`):
+  `state()` → `{ cursor, current, last, enabled }`, `play(voice)`, `reset()`,
+  plus `progression` and `voices`. Try it in the iPad console:
+  `__pdfFixerSound.play('chord')`.
+- In dev only, a floating panel (`src/components/sound-debug.ts`, mounted in
+  `src/main.ts` behind `import.meta.env.DEV`) has one button per voice and a live
+  readout of cursor/current/last. It never ships to production.
+- `npm run sound` (`scripts/sound-test.mjs`, Playwright against `dist/`) spies on
+  `AudioContext.prototype.createOscillator`, asserts the 6-step I-IV-V (octave up)
+  order, that results play the next chord, and that the cursor advances/resets.
 
 ## Verification checklist
 
 1. `npx tsc --noEmit` and `npm run build`.
-2. `node scripts/e2e.mjs` for regressions.
-3. To inspect pitches, spy on `AudioContext.prototype.createOscillator` and read
-   the values passed to `frequency.setValueAtTime`; assert the entry chord and the
-   result chord share a root and that consecutive entries differ.
+2. `npm run sound` — progression, result, and cursor checks pass.
+3. `node scripts/e2e.mjs` for regressions (it toggles `#auto`, exercising `flip`).
+4. To inspect pitches manually, spy on `createOscillator` and read the values
+   passed to `frequency.setValueAtTime`; the lowest frequency in a chord is its root.
