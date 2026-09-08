@@ -131,6 +131,8 @@ scripts/{smoke,e2e,og-image}.mjs  Node, Playwright e2e, asset generation
   adding/moving UI or wiring state.
 - `docs/I18N.md` - locales, `t()`/`data-i18n`, adding a language. Read before
   touching any user-facing string.
+- `docs/SOUND.md` - the synthesized SFX and the I-IV-V / per-card harmony model.
+  Read before changing audio or reusing it elsewhere.
 - Doc budget: `AGENTS.md` stays under ~200 lines (loaded every session);
   `docs/*.md` under ~200. Prefer `file:line` pointers over prose; move detail
   out, never append.

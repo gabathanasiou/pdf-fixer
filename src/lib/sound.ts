@@ -54,6 +54,27 @@ function tone(
   osc.stop(start + dur + 0.05)
 }
 
+const SCALE = [0, 2, 4, 5, 7, 9, 11]
+const ROOT = 261.63
+const PROGRESSION = [0, 5, 7]
+let step = 0
+let progression = 0
+let lastRoot = 0
+
+function nextRoot(): number {
+  const semitones = SCALE[step % SCALE.length]
+  step = (step + 1) % SCALE.length
+  return ROOT * Math.pow(2, semitones / 12)
+}
+
+function rootOf(semitones: number): number {
+  return ROOT * Math.pow(2, semitones / 12)
+}
+
+function note(root: number, semitones: number): number {
+  return root * Math.pow(2, semitones / 12)
+}
+
 export function isSoundOn(): boolean {
   return enabled
 }
@@ -70,55 +91,51 @@ export function toggleSound(): boolean {
 }
 
 export function pop(): void {
-  tone(660, 0, 0.09, 'sine', 0.05)
-  tone(990, 0.05, 0.1, 'sine', 0.04)
+  const root = nextRoot()
+  tone(note(root, 0), 0, 0.09, 'sine', 0.05)
+  tone(note(root, 7), 0.05, 0.1, 'sine', 0.04)
 }
 
-export function poof(): void {
-  if (!enabled) return
-  let ac: AudioContext
-  try {
-    ac = context()
-  } catch {
-    return
-  }
-  const start = ac.currentTime
-  const duration = 0.2
-  const buffer = ac.createBuffer(1, Math.floor(ac.sampleRate * duration), ac.sampleRate)
-  const data = buffer.getChannelData(0)
-  for (let i = 0; i < data.length; i++) {
-    data[i] = (Math.random() * 2 - 1) * (1 - i / data.length)
-  }
-  const source = ac.createBufferSource()
-  source.buffer = buffer
-  const filter = ac.createBiquadFilter()
-  filter.type = 'lowpass'
-  filter.frequency.setValueAtTime(1400, start)
-  filter.frequency.exponentialRampToValueAtTime(280, start + duration)
-  const gain = ac.createGain()
-  gain.gain.setValueAtTime(0.07, start)
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
-  source.connect(filter).connect(gain).connect(ac.destination)
-  source.start(start)
-  source.stop(start + duration)
+export function chord(): void {
+  const degree = PROGRESSION[progression % PROGRESSION.length]
+  progression += 1
+  lastRoot = degree
+  const root = rootOf(degree)
+  tone(note(root, 0), 0, 0.3, 'sine', 0.05)
+  tone(note(root, 4), 0, 0.3, 'sine', 0.045)
+  tone(note(root, 7), 0, 0.3, 'sine', 0.045)
 }
 
 export function tick(): void {
-  tone(1180, 0, 0.05, 'sine', 0.03)
+  tone(nextRoot(), 0, 0.05, 'sine', 0.03)
 }
 
 export function success(): void {
-  tone(523.25, 0, 0.16, 'sine', 0.05)
-  tone(659.25, 0.07, 0.16, 'sine', 0.05)
-  tone(783.99, 0.14, 0.22, 'sine', 0.05)
+  const root = rootOf(lastRoot)
+  for (const semitones of [0, 4, 7]) tone(note(root, semitones), 0, 0.2, 'sine', 0.045)
+
+  const arp = [0, 4, 7, 12, 16, 19]
+  arp.forEach((semitones, index) =>
+    tone(note(root, semitones), 0.18 + index * 0.06, 0.14, 'sine', 0.045),
+  )
+
+  const end = 0.18 + arp.length * 0.06
+  for (const semitones of [0, 4, 7, 12]) {
+    tone(note(root, semitones), end, 0.8, 'sine', 0.04)
+  }
 }
 
 export function clean(): void {
-  tone(659.25, 0, 0.14, 'sine', 0.045)
-  tone(987.77, 0.08, 0.18, 'sine', 0.04)
+  const root = rootOf(lastRoot)
+  const melody = [7, 4, 0]
+  melody.forEach((semitones, index) => {
+    const last = index === melody.length - 1
+    tone(note(root, semitones), index * 0.18, last ? 0.5 : 0.18, 'sine', 0.045)
+  })
 }
 
 export function error(): void {
-  tone(392, 0, 0.16, 'triangle', 0.05)
-  tone(294, 0.09, 0.22, 'triangle', 0.045)
+  const root = nextRoot()
+  tone(note(root, 7), 0, 0.16, 'triangle', 0.05)
+  tone(note(root, 4), 0.09, 0.22, 'triangle', 0.045)
 }

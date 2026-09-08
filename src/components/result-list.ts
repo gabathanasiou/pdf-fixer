@@ -1,7 +1,7 @@
 import { t } from '../i18n'
 import { el } from '../lib/dom'
 import { documentIcon } from '../lib/icons'
-import { poof } from '../lib/sound'
+import { chord } from '../lib/sound'
 import { ResultRow } from './result-row'
 
 export interface ResultList {
@@ -36,7 +36,7 @@ export function ResultList(): ResultList {
 
       const row = ResultRow(name)
       root.prepend(row.el)
-      poof()
+      chord()
 
       existing.forEach((node, index) => {
         const delta = before[index] - node.getBoundingClientRect().top
