@@ -3,46 +3,70 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#3b5bdb" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233b5bdb'/%3E%3Cpath d='M30 25h28l12 12v40H30z' fill='%23fff'/%3E%3Cpath d='M58 27v12h12' fill='none' stroke='%233b5bdb' stroke-width='4'/%3E%3C/svg%3E"
+    <title>Επιδιόρθωση PDF | PDF Repair</title>
+    <meta
+      name="description"
+      content="Διόρθωσε χαλασμένα PDF μέσα στο πρόγραμμα περιήγησης. Χωρίς ανέβασμα, χωρίς server. Σύρε το αρχείο και κατέβασε το διορθωμένο."
     />
-    <title>Επιδιόρθωση PDF</title>
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#cbb7e8" />
+    <link rel="canonical" href="https://pdf-fixer.netlify.app/" />
+
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./site.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Repair" />
+    <meta property="og:title" content="Επιδιόρθωση PDF | PDF Repair" />
+    <meta
+      property="og:description"
+      content="Repair broken PDFs in your browser. Nothing is uploaded, no server. Drop a file and download the fixed copy."
+    />
+    <meta property="og:url" content="https://pdf-fixer.netlify.app/" />
+    <meta property="og:image" content="https://pdf-fixer.netlify.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="el_GR" />
+    <meta property="og:locale:alternate" content="en_GB" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Επιδιόρθωση PDF | PDF Repair" />
+    <meta
+      name="twitter:description"
+      content="Repair broken PDFs in your browser. Nothing is uploaded, no server."
+    />
+    <meta name="twitter:image" content="https://pdf-fixer.netlify.app/og-image.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "PDF Repair",
+        "alternateName": "Επιδιόρθωση PDF",
+        "url": "https://pdf-fixer.netlify.app/",
+        "description": "Repair broken PDF files directly in your browser. Files are never uploaded and the repair runs on your device with WebAssembly.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a modern browser with WebAssembly support",
+        "inLanguage": ["el", "en"],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        }
+      }
+    </script>
   </head>
   <body>
-    <main class="wrap">
-      <header>
-        <h1>Επιδιόρθωση PDF</h1>
-        <p class="sub">
-          Γειά σου μαμά, ανέβασε το χαλασμένο PDF και κατέβασε το διορθωμένο. Τίποτα
-          δεν φεύγει από τη συσκευή σου — η επεξεργασία γίνεται εδώ, στο πρόγραμμα περιήγησης.
-        </p>
-      </header>
-
-      <section
-        id="drop"
-        class="drop"
-        role="button"
-        tabindex="0"
-        aria-label="Πάτησε για να επιλέξεις αρχεία PDF"
-      >
-        <div class="drop-inner">
-          <div class="drop-icon" aria-hidden="true">⇪</div>
-          <p class="drop-title">Πάτησε για να επιλέξεις αρχεία PDF</p>
-          <p class="drop-sub">Μπορείς να σύρεις και να αφήσεις τα αρχεία εδώ</p>
-          <input id="file" type="file" accept="application/pdf,.pdf" multiple hidden />
-        </div>
-      </section>
-
-      <label class="auto">
-        <input id="auto" type="checkbox" />
-        Κατέβασε αυτόματα κάθε διορθωμένο αρχείο
-      </label>
-
-      <section id="list" class="list" aria-live="polite"></section>
-    </main>
-
+    <main id="app" class="wrap"></main>
+    <noscript>
+      <p>
+        Χρειάζεται JavaScript για να δουλέψει η επιδιόρθωση PDF μέσα στο πρόγραμμα
+        περιήγησης. Ενεργοποίησέ το και ξαναφόρτωσε τη σελίδα. / This app needs
+        JavaScript to repair PDFs in your browser. Enable it and reload.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = join(root, 'dist')
 const brokenPdf = `${process.env.HOME}/Downloads/Broken.pdf`
 
-if (!existsSync(dist)) throw new Error('dist not built — run npm run build first')
+if (!existsSync(dist)) throw new Error('dist not built, run npm run build first')
 if (!existsSync(brokenPdf)) throw new Error(`missing ${brokenPdf}`)
 
 const server = spawn('python3', ['-m', 'http.server', '4783', '--bind', '127.0.0.1'], {
@@ -34,6 +34,7 @@ try {
   console.log('app ready (wasm loaded, listeners attached)')
 
   const downloadPromise = page.waitForEvent('download', { timeout: 20000 }).catch(() => null)
+  await page.check('#auto')
   await page.setInputFiles('#file', brokenPdf)
   try {
     await page.waitForSelector('.badge.ok, .badge.err', { timeout: 60000 })
@@ -50,8 +51,9 @@ try {
     throw new Error('processing did not finish')
   }
 
-  const badge = await page.textContent('.badge')
-  if (badge?.includes('Δεν τα κατάφερε') || badge?.includes('Σφάλμα')) {
+  const failed = await page.evaluate(() => Boolean(document.querySelector('.badge.err')))
+  if (failed) {
+    const badge = await page.textContent('.badge')
     throw new Error(`app reported failure: ${badge}`)
   }
   const download = await downloadPromise
@@ -63,7 +65,7 @@ try {
     const last = document.querySelector('.row')
     return {
       badge: last?.querySelector('.badge')?.textContent,
-      meta: last?.querySelector('.row-meta')?.textContent,
+      pages: last?.querySelector('.row-pages')?.textContent,
       note: last?.querySelector('.fixed-note')?.textContent ?? null,
     }
   })
