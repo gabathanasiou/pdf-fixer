@@ -9,12 +9,19 @@ const autoEl = document.getElementById('auto') as HTMLInputElement
 let openLogs: string[] = []
 mupdf.setLog((message) => openLogs.push(String(message)))
 
-function fmt(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  const kb = bytes / 1024
-  if (kb < 1024) return `${kb.toFixed(0)} KB`
-  return `${(kb / 1024).toFixed(2)} MB`
+const AUTO_KEY = 'pdf-fixer:auto-download'
+try {
+  autoEl.checked = localStorage.getItem(AUTO_KEY) === '1'
+} catch {
+  autoEl.checked = false
 }
+autoEl.addEventListener('change', () => {
+  try {
+    localStorage.setItem(AUTO_KEY, autoEl.checked ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+})
 
 function outputName(name: string): string {
   return name.replace(/\.pdf$/i, '') + '-fixed.pdf'
@@ -35,6 +42,7 @@ interface RowView {
   el: HTMLElement
   badgeEl: HTMLElement
   metaEl: HTMLElement
+  trackEl: HTMLElement
   barEl: HTMLElement
 }
 
@@ -65,7 +73,7 @@ function makeRow(name: string): RowView {
 
   el.append(top, metaEl, bar)
 
-  return { el, badgeEl, metaEl, barEl: fill }
+  return { el, badgeEl, metaEl, trackEl: bar, barEl: fill }
 }
 
 function setBusy(view: RowView, pct: number): void {
@@ -78,23 +86,32 @@ function setError(view: RowView, message: string): void {
   view.badgeEl.className = 'badge err'
   view.badgeEl.textContent = 'Δεν τα κατάφερε'
   view.metaEl.textContent = message
-  view.barEl.style.display = 'none'
+  view.trackEl.style.display = "none"
 }
 
-function setDone(
+function setClean(view: RowView, pages: number): void {
+  view.badgeEl.className = 'badge clean'
+  view.badgeEl.textContent = 'Καλό PDF'
+  view.metaEl.textContent = `${pages} σελίδες`
+  view.trackEl.style.display = "none"
+
+  const note = document.createElement('div')
+  note.className = 'fixed-note clean'
+  note.textContent = 'Δεν εντοπίστηκαν προβλήματα — το αρχείο ήταν ήδη εντάξει.'
+  view.metaEl.insertAdjacentElement('afterend', note)
+}
+
+function setFixed(
   view: RowView,
   pages: number,
-  inBytes: number,
-  outBytes: number,
   issues: number,
   blob: Blob,
   name: string,
 ): void {
   view.badgeEl.className = 'badge ok'
   view.badgeEl.textContent = 'Έτοιμο'
-  view.metaEl.textContent = `${pages} σελίδες · ${fmt(inBytes)} → ${fmt(outBytes)}`
-  view.barEl.style.width = '100%'
-  view.barEl.style.background = 'var(--ok)'
+  view.metaEl.textContent = `${pages} σελίδες`
+  view.trackEl.style.display = "none"
 
   if (issues > 0) {
     const note = document.createElement('div')
@@ -103,11 +120,6 @@ function setDone(
       issues === 1
         ? 'Διορθώθηκε 1 πρόβλημα στη δομή του PDF.'
         : `Διορθώθηκαν ${issues} προβλήματα στη δομή του PDF.`
-    view.metaEl.insertAdjacentElement('afterend', note)
-  } else {
-    const note = document.createElement('div')
-    note.className = 'fixed-note clean'
-    note.textContent = 'Δεν εντοπίστηκαν προβλήματα — το αρχείο ήταν ήδη εντάξει.'
     view.metaEl.insertAdjacentElement('afterend', note)
   }
 
@@ -161,11 +173,16 @@ async function fixOne(file: File): Promise<void> {
     const issues =
       structuralIssueCount(new Uint8Array(buf)) + openIssues + (pdf.wasRepaired() ? 1 : 0)
 
+    if (issues === 0) {
+      setClean(view, pages)
+      doc.destroy()
+      return
+    }
+
     const out = pdf.saveToBuffer('compress,garbage=4,clean').asUint8Array()
-    const outBytes = out.slice().byteLength
     const blob = new Blob([out], { type: 'application/pdf' })
 
-    setDone(view, pages, buf.byteLength, outBytes, issues, blob, outputName(file.name))
+    setFixed(view, pages, issues, blob, outputName(file.name))
     doc.destroy()
 
     if (autoEl.checked) triggerDownload(blob, outputName(file.name))

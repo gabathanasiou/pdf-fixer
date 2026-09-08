@@ -197,6 +197,11 @@ header h1 {
   color: var(--bad);
 }
 
+.badge.clean {
+  background: #e4f5ea;
+  color: var(--ok);
+}
+
 .row-meta {
   color: var(--muted);
   font-size: 1rem;
@@ -242,7 +247,7 @@ header h1 {
 }
 
 .fixed-note.clean {
-  color: var(--muted);
+  color: var(--ok);
 }
 
 @media (min-width: 640px) {
