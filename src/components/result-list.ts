@@ -6,7 +6,7 @@ import { ResultRow } from './result-row'
 
 export interface ResultList {
   el: HTMLElement
-  add(name: string, source?: HTMLElement): ResultRow
+  add(name: string): ResultRow
 }
 
 export function ResultList(): ResultList {
@@ -25,7 +25,7 @@ export function ResultList(): ResultList {
 
   return {
     el: root,
-    add(name, source) {
+    add(name) {
       empty.hidden = true
 
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -47,13 +47,10 @@ export function ResultList(): ResultList {
       })
 
       if (!reduced) {
-        const to = row.el.getBoundingClientRect()
-        const from = source && !source.hidden ? source.getBoundingClientRect() : null
-        const dx = from ? Math.sign(from.left - to.left) * 14 : 0
         row.el.animate(
           [
-            { transform: `translate(${dx}px, -16px) scale(0.97)`, opacity: 0 },
-            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: 'translateY(-16px) scale(0.97)', opacity: 0 },
+            { transform: 'translateY(0) scale(1)', opacity: 1 },
           ],
           { duration: 460, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
         )

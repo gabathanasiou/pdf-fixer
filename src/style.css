@@ -393,7 +393,7 @@ body.info-open {
   align-content: start;
   gap: 18px;
   min-height: 0;
-  padding: 28px 16px 20px;
+  padding: 28px 0 20px;
 }
 
 .list-empty {
@@ -682,7 +682,8 @@ body.info-open {
   background: var(--accent);
   color: var(--accent-ink);
   border: 1px solid transparent;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+    transform 0.1s ease;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -696,7 +697,7 @@ body.info-open {
 }
 
 .dl:active {
-  opacity: 0.85;
+  transform: scale(0.97);
 }
 
 .fixed-note {
@@ -861,6 +862,7 @@ body.info-open {
 @media (max-width: 760px) {
   .layout {
     flex-direction: column;
+    gap: 16px;
   }
   .panel-input,
   .panel-output {
@@ -888,13 +890,13 @@ body.info-open {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1e1828;
+    --bg: #14101e;
     --ink: #f2ecff;
-    --muted: #a99cc4;
-    --card: #281f36;
-    --line: #3d3352;
-    --panel-bg: #221a30;
-    --track: #382f4a;
+    --muted: #ab9fc6;
+    --card: #342a4c;
+    --line: #52456f;
+    --panel-bg: #1a1528;
+    --track: #3b3055;
     --leaf-strong: #7fd3a8;
     --leaf-hover: #223026;
     --ok: #8fe3b4;

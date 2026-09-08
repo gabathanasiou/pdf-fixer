@@ -87,7 +87,7 @@ function handleFiles(files: FileList | Iterable<File>): void {
 }
 
 async function fixOne(file: File): Promise<void> {
-  const row = list.add(file.name, queue)
+  const row = list.add(file.name)
   row.setBusy()
 
   const result = await repairPdf(file)

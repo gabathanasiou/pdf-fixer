@@ -3,6 +3,7 @@ import { el } from '../lib/dom'
 import { clearHistory, deleteHistory, loadHistory, type RepairRecord } from '../lib/history'
 import { trashIcon } from '../lib/icons'
 import { press } from '../lib/press'
+import { tap } from '../lib/sound'
 
 export interface HistoryList {
   el: HTMLElement
@@ -190,8 +191,8 @@ export function HistoryList(
             text: t('download'),
             attrs: { href: url, download: record.name },
             on: {
-              click: (event) => {
-                press(event.currentTarget as HTMLElement)
+              click: () => {
+                tap()
                 setTimeout(() => URL.revokeObjectURL(url), 4000)
               },
             },

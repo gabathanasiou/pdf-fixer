@@ -1,8 +1,7 @@
 import { onLangChange, t } from '../i18n'
 import { confetti } from '../lib/confetti'
 import { el } from '../lib/dom'
-import { press } from '../lib/press'
-import { clean as cleanSound, error as errorSound, success } from '../lib/sound'
+import { clean as cleanSound, error as errorSound, success, tap } from '../lib/sound'
 
 type RowState =
   | { kind: 'busy'; repairing: boolean }
@@ -133,8 +132,8 @@ export function ResultRow(name: string): ResultRow {
       text: t('download'),
       attrs: { href: url, download: state.name },
       on: {
-        click: (event) => {
-          press(event.currentTarget as HTMLElement)
+        click: () => {
+          tap()
           setTimeout(() => URL.revokeObjectURL(url), 4000)
         },
       },
