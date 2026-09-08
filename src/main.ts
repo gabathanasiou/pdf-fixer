@@ -82,6 +82,8 @@ function setDone(view: RowView, pages: number, inBytes: number, outBytes: number
   view.badgeEl.className = 'badge ok'
   view.badgeEl.textContent = 'Έτοιμο'
   view.metaEl.textContent = `${pages} σελίδες · ${fmt(inBytes)} → ${fmt(outBytes)}`
+  view.barEl.style.width = '100%'
+  view.barEl.style.background = 'var(--ok)'
 
   const a = document.createElement('a')
   a.className = 'dl'
