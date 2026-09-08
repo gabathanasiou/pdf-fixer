@@ -104,6 +104,11 @@ function setDone(
         ? 'Διορθώθηκε 1 πρόβλημα στη δομή του PDF.'
         : `Διορθώθηκαν ${issues} προβλήματα στη δομή του PDF.`
     view.metaEl.insertAdjacentElement('afterend', note)
+  } else {
+    const note = document.createElement('div')
+    note.className = 'fixed-note clean'
+    note.textContent = 'Δεν εντοπίστηκαν προβλήματα — το αρχείο ήταν ήδη εντάξει.'
+    view.metaEl.insertAdjacentElement('afterend', note)
   }
 
   const a = document.createElement('a')
