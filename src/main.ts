@@ -6,6 +6,9 @@ const fileInput = document.getElementById('file') as HTMLInputElement
 const listEl = document.getElementById('list') as HTMLElement
 const autoEl = document.getElementById('auto') as HTMLInputElement
 
+let openLogs: string[] = []
+mupdf.setLog((message) => openLogs.push(String(message)))
+
 function fmt(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   const kb = bytes / 1024
@@ -78,12 +81,30 @@ function setError(view: RowView, message: string): void {
   view.barEl.style.display = 'none'
 }
 
-function setDone(view: RowView, pages: number, inBytes: number, outBytes: number, blob: Blob, name: string): void {
+function setDone(
+  view: RowView,
+  pages: number,
+  inBytes: number,
+  outBytes: number,
+  issues: number,
+  blob: Blob,
+  name: string,
+): void {
   view.badgeEl.className = 'badge ok'
   view.badgeEl.textContent = 'Έτοιμο'
   view.metaEl.textContent = `${pages} σελίδες · ${fmt(inBytes)} → ${fmt(outBytes)}`
   view.barEl.style.width = '100%'
   view.barEl.style.background = 'var(--ok)'
+
+  if (issues > 0) {
+    const note = document.createElement('div')
+    note.className = 'fixed-note'
+    note.textContent =
+      issues === 1
+        ? 'Διορθώθηκε 1 πρόβλημα στη δομή του PDF.'
+        : `Διορθώθηκαν ${issues} προβλήματα στη δομή του PDF.`
+    view.metaEl.insertAdjacentElement('afterend', note)
+  }
 
   const a = document.createElement('a')
   a.className = 'dl'
@@ -94,12 +115,29 @@ function setDone(view: RowView, pages: number, inBytes: number, outBytes: number
   view.el.appendChild(a)
 }
 
+function structuralIssueCount(bytes: Uint8Array): number {
+  const s = new TextDecoder('iso-8859-1').decode(bytes)
+  let issues = 0
+  const eofs: number[] = []
+  for (let i = 0; (i = s.indexOf('%%EOF', i)) !== -1; i += 5) eofs.push(i)
+  for (let k = 0; k + 1 < eofs.length; k++) {
+    if (/\S/.test(s.slice(eofs[k] + 5, eofs[k + 1]))) issues++
+  }
+  const sxs: number[] = []
+  for (let i = 0; (i = s.indexOf('startxref', i)) !== -1; i += 9) sxs.push(i)
+  for (let k = 0; k + 1 < sxs.length; k++) {
+    if (/\S/.test(s.slice(sxs[k] + 9, sxs[k + 1]))) issues++
+  }
+  return issues
+}
+
 async function fixOne(file: File): Promise<void> {
   const view = makeRow(file.name)
   listEl.prepend(view.el)
   setBusy(view, 10)
 
   try {
+    openLogs = []
     const buf = await file.arrayBuffer()
     setBusy(view, 45)
 
@@ -114,11 +152,15 @@ async function fixOne(file: File): Promise<void> {
     const pages = doc.countPages()
     setBusy(view, 70)
 
+    const openIssues = openLogs.length
+    const issues =
+      structuralIssueCount(new Uint8Array(buf)) + openIssues + (pdf.wasRepaired() ? 1 : 0)
+
     const out = pdf.saveToBuffer('compress,garbage=4,clean').asUint8Array()
     const outBytes = out.slice().byteLength
     const blob = new Blob([out], { type: 'application/pdf' })
 
-    setDone(view, pages, buf.byteLength, outBytes, blob, outputName(file.name))
+    setDone(view, pages, buf.byteLength, outBytes, issues, blob, outputName(file.name))
     doc.destroy()
 
     if (autoEl.checked) triggerDownload(blob, outputName(file.name))

@@ -218,13 +218,13 @@ header h1 {
 }
 
 .dl {
-  display: block;
-  text-align: center;
-  font-size: 1.15rem;
-  font-weight: 800;
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.95rem;
+  font-weight: 700;
   text-decoration: none;
-  border-radius: 14px;
-  padding: 16px 18px;
+  border-radius: 10px;
+  padding: 10px 16px;
   background: var(--accent);
   color: var(--accent-ink);
   -webkit-user-select: none;
@@ -235,12 +235,10 @@ header h1 {
   opacity: 0.8;
 }
 
-.privacy {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 1rem;
-  line-height: 1.8;
-  flex: none;
+.fixed-note {
+  color: var(--ok);
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 @media (min-width: 640px) {

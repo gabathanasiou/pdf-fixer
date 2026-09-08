@@ -64,6 +64,7 @@ try {
     return {
       badge: last?.querySelector('.badge')?.textContent,
       meta: last?.querySelector('.row-meta')?.textContent,
+      note: last?.querySelector('.fixed-note')?.textContent ?? null,
     }
   })
   console.log('UI row:', JSON.stringify(docInfo))
