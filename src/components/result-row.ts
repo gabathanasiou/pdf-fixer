@@ -1,6 +1,7 @@
 import { onLangChange, t } from '../i18n'
 import { confetti } from '../lib/confetti'
 import { el } from '../lib/dom'
+import { press } from '../lib/press'
 import { clean as cleanSound, error as errorSound, success } from '../lib/sound'
 
 type RowState =
@@ -131,7 +132,12 @@ export function ResultRow(name: string): ResultRow {
       class: 'dl',
       text: t('download'),
       attrs: { href: url, download: state.name },
-      on: { click: () => setTimeout(() => URL.revokeObjectURL(url), 4000) },
+      on: {
+        click: (event) => {
+          press(event.currentTarget as HTMLElement)
+          setTimeout(() => URL.revokeObjectURL(url), 4000)
+        },
+      },
     })
     root.appendChild(link)
   }

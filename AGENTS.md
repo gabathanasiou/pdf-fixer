@@ -62,7 +62,10 @@ file before changing code; deeper manuals live in `docs/`.
   `src/global.d.ts`) and is the e2e readiness hook. Keep it set last.
 - `localStorage` holds only UI prefs: `pdf-fixer:lang` (`src/i18n.ts:3`),
   `pdf-fixer:auto-download` (`src/components/auto-download.ts:4`), and
-  `pdf-fixer:sound` (`src/lib/sound.ts:1`). No app data is persisted.
+  `pdf-fixer:sound` (`src/lib/sound.ts:1`). Repaired files are stored separately
+  in IndexedDB (`pdf-fixer` / `repairs`) for the Recent list: at most 5 repairs
+  with blobs plus 20 metadata-only entries, grouped by date. Blobs expire after
+  30 days (the card stays and the download shows "Expired").
 
 ## PDF Repair Model
 
@@ -110,11 +113,13 @@ file before changing code; deeper manuals live in `docs/`.
 ```
 index.html                     shell: SEO head + <main id="app"> mount point
 src/main.ts                    composition root + file to repair to row flow
-src/components/                header, intro, drop-zone, auto-download, result-list, result-row, info-dialog
+src/components/                header, intro, drop-zone, auto-download, result-list, result-row, history-list, info-dialog
 src/lib/dom.ts                 el() element factory (the only DOM builder)
 src/lib/repair.ts              MuPDF repair (pure, discriminated union result)
 src/lib/download.ts            outputName() / triggerDownload()
 src/lib/confetti.ts            radial celebration burst on completion
+src/lib/history.ts             IndexedDB store for the Recent repairs (cap 5 blobs)
+src/lib/press.ts               press animation + harmonious tap SFX
 src/lib/sound.ts               synthesized Web Audio SFX + mute pref
 src/lib/flags.ts               inline SVG flag data URIs (el, en) + otherLang()
 src/lib/icons.ts               inline SVG icons (close, document)

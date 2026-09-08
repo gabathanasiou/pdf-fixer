@@ -58,3 +58,12 @@ export function soundOffIcon(): SVGElement {
     shape('line', { x1: '17', y1: '9', x2: '23', y2: '15' }),
   ])
 }
+
+export function trashIcon(): SVGElement {
+  return icon([
+    shape('polyline', { points: '3 6 5 6 21 6' }),
+    shape('path', { d: 'M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6' }),
+    shape('path', { d: 'M10 11v6M14 11v6' }),
+    shape('path', { d: 'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' }),
+  ])
+}

@@ -115,6 +115,12 @@ export function tick(): void {
   tone(nextRoot(), 0, 0.05, 'sine', 0.03)
 }
 
+export function tap(): void {
+  const root = nextRoot()
+  tone(note(root, 0), 0, 0.09, 'sine', 0.055)
+  tone(note(root, 7), 0.045, 0.14, 'sine', 0.05)
+}
+
 export function success(): void {
   const root = rootOf(lastRoot)
   for (const semitones of [0, 4, 7]) tone(note(root, semitones), 0, 0.2, 'sine', 0.045)

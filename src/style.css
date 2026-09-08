@@ -170,6 +170,19 @@ header h1 {
   outline: none;
 }
 
+.pill-btn.danger {
+  border-color: transparent;
+  background: var(--bad-bg);
+  color: var(--bad-ink);
+}
+
+.pill-btn.danger:hover,
+.pill-btn.danger:focus-visible {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+  color: var(--bad-ink);
+}
+
 .flag {
   width: 22px;
   height: 15px;
@@ -673,6 +686,136 @@ body.info-open {
 
 .fixed-note.clean {
   color: var(--ok);
+}
+
+.fixed-note.err {
+  color: var(--bad);
+}
+
+.history {
+  display: grid;
+  gap: 18px;
+  margin-top: 6px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.history-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.history-items {
+  display: grid;
+  gap: 18px;
+}
+
+.history-group {
+  display: grid;
+  gap: 18px;
+}
+
+.history-date {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.history-date::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--line);
+}
+
+.history-badge-row {
+  position: absolute;
+  top: -10px;
+  right: 16px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-badge-row .badge {
+  position: static;
+}
+
+.history-delete,
+.history-clear {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 999px;
+  background: var(--bad-bg);
+  color: var(--bad-ink);
+  cursor: pointer;
+}
+
+.history-delete:hover,
+.history-delete:focus-visible,
+.history-clear:hover,
+.history-clear:focus-visible {
+  filter: brightness(0.96);
+  outline: none;
+}
+
+.history-delete .icon,
+.history-clear .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.history-expired {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.history-expired:hover,
+.history-expired:focus-visible {
+  border-color: var(--leaf-strong);
+  color: var(--ink);
+  outline: none;
+}
+
+.message-text {
+  margin: 8px 0 20px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.message-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 @media (min-width: 640px) {
