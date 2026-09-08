@@ -95,23 +95,15 @@ async function fixOne(file: File): Promise<void> {
 
   if (result.status === 'error') {
     row.setError(result.message, result.notPdf)
-    saving = record({
-      name: file.name,
-      kind: 'error',
-      notPdf: result.notPdf,
-      message: result.message,
-    })
   } else {
     await row.complete()
     if (result.status === 'clean') {
       row.setClean(result.pages)
-      saving = record({ name: file.name, kind: 'clean', pages: result.pages })
     } else {
       row.setFixed(result.pages, result.issues, result.blob, result.name)
       if (auto.isChecked()) triggerDownload(result.blob, result.name)
       saving = record({
         name: result.name,
-        kind: 'fixed',
         blob: result.blob,
         pages: result.pages,
         issues: result.issues,
@@ -126,16 +118,13 @@ async function fixOne(file: File): Promise<void> {
 
 function record(entry: {
   name: string
-  kind: 'fixed' | 'clean' | 'error'
-  blob?: Blob
-  pages?: number
-  issues?: number
-  notPdf?: boolean
-  message?: string
+  blob: Blob
+  pages: number
+  issues: number
 }): Promise<void> {
   const id = newId()
   currentIds.add(id)
-  return addHistory({ ...entry, id, createdAt: Date.now() }).catch(() => {})
+  return addHistory({ ...entry, id, kind: 'fixed', createdAt: Date.now() }).catch(() => {})
 }
 
 window.__pdfFixerReady = true

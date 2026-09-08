@@ -737,6 +737,12 @@ body.info-open {
   gap: 12px;
 }
 
+.history-note {
+  margin: -6px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
 .history-items {
   display: grid;
   gap: 18px;

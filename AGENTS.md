@@ -62,10 +62,10 @@ file before changing code; deeper manuals live in `docs/`.
   `src/global.d.ts`) and is the e2e readiness hook. Keep it set last.
 - `localStorage` holds only UI prefs: `pdf-fixer:lang` (`src/i18n.ts:3`),
   `pdf-fixer:auto-download` (`src/components/auto-download.ts:4`), and
-  `pdf-fixer:sound` (`src/lib/sound.ts:1`). Repaired files are stored separately
-  in IndexedDB (`pdf-fixer` / `repairs`) for the Recent list: at most 5 repairs
-  with blobs plus 20 metadata-only entries, grouped by date. Blobs expire after
-  30 days (the card stays and the download shows "Expired").
+  `pdf-fixer:sound` (`src/lib/sound.ts:1`). Repaired (fixed) files are stored
+  separately in IndexedDB (`pdf-fixer` / `repairs`) for the Recent list: at most
+  5, no date grouping. Blobs expire after 30 days (the card stays and the
+  download shows "Expired").
 
 ## PDF Repair Model
 

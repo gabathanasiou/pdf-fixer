@@ -14,8 +14,7 @@ export interface RepairRecord {
 
 const DB_NAME = 'pdf-fixer'
 const STORE = 'repairs'
-const FIXED_LIMIT = 5
-const OTHER_LIMIT = 20
+const LIMIT = 5
 const EXPIRY_MS = 30 * 24 * 60 * 60 * 1000
 
 export function newId(): string {
@@ -81,9 +80,7 @@ export async function addHistory(record: RepairRecord): Promise<void> {
   })
 
   const all = await loadHistory()
-  const withBlob = all.filter((item) => item.blob)
-  const withoutBlob = all.filter((item) => !item.blob)
-  const excess = [...withBlob.slice(FIXED_LIMIT), ...withoutBlob.slice(OTHER_LIMIT)]
+  const excess = all.slice(LIMIT)
   if (excess.length === 0) return
 
   await new Promise<void>((resolve, reject) => {
