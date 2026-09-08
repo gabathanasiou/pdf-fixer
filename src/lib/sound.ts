@@ -14,6 +14,17 @@ function context(): AudioContext {
   return ctx
 }
 
+let master: GainNode | undefined
+
+function output(ac: AudioContext): AudioNode {
+  if (!master) {
+    master = ac.createGain()
+    master.gain.value = 4
+    master.connect(ac.destination)
+  }
+  return master
+}
+
 function unlock(): void {
   try {
     const ac = context()
@@ -49,7 +60,7 @@ function tone(
   gain.gain.setValueAtTime(0.0001, start)
   gain.gain.exponentialRampToValueAtTime(peak, start + 0.015)
   gain.gain.exponentialRampToValueAtTime(0.0001, start + dur)
-  osc.connect(gain).connect(ac.destination)
+  osc.connect(gain).connect(output(ac))
   osc.start(start)
   osc.stop(start + dur + 0.05)
 }

@@ -15,6 +15,23 @@ const BADGE: Record<RepairRecord['kind'], { class: string; key: 'ready' | 'clean
   error: { class: 'badge err', key: 'failed' },
 }
 
+const SPIN_MS = 450
+
+function playSpinOut(card: HTMLElement, delay = 0): Promise<void> {
+  return new Promise((resolve) => {
+    card.style.animationDelay = `${delay}ms`
+    card.classList.add('deleting')
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      resolve()
+    }
+    card.addEventListener('animationend', finish, { once: true })
+    setTimeout(finish, SPIN_MS + delay + 150)
+  })
+}
+
 function sameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -68,22 +85,10 @@ export function HistoryList(
 
   async function clear(): Promise<void> {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const cards = [...items.querySelectorAll<HTMLElement>('.row')]
+    console.log('[pdf-fixer] clear history', { cards: cards.length, reduced })
     if (!reduced) {
-      const cards = [...items.querySelectorAll<HTMLElement>('.row')]
-      cards.forEach((card) => (card.style.willChange = 'transform, opacity'))
-      await Promise.all(
-        cards.map((card, index) =>
-          card
-            .animate(
-              [
-                { transform: 'perspective(900px) rotateX(0deg)', opacity: 1 },
-                { transform: 'perspective(900px) rotateX(1800deg)', opacity: 0 },
-              ],
-              { duration: 600, delay: index * 60, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-            )
-            .finished.catch(() => {}),
-        ),
-      )
+      await Promise.all(cards.map((card, index) => playSpinOut(card, index * 60)))
     }
     try {
       await clearHistory()
@@ -95,22 +100,8 @@ export function HistoryList(
 
   async function removeCard(card: HTMLElement, id: string): Promise<void> {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    if (!reduced) {
-      card.style.willChange = 'transform, opacity'
-      try {
-        await card.animate(
-          [
-            { transform: 'perspective(900px) rotateX(0deg)', opacity: 1 },
-            { transform: 'perspective(900px) rotateX(1800deg)', opacity: 0 },
-          ],
-          { duration: 600, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-        ).finished
-      } catch {
-        /* cancelled */
-      }
-      card.style.willChange = ''
-    }
+    console.log('[pdf-fixer] delete card', { id, reduced, className: card.className })
+    if (!reduced) await playSpinOut(card)
 
     const others = [...items.querySelectorAll<HTMLElement>('.row')].filter((node) => node !== card)
     const before = others.map((node) => node.getBoundingClientRect().top)

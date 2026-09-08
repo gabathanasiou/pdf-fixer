@@ -472,6 +472,27 @@ body.info-open {
   animation: shake 0.4s ease;
 }
 
+.row.deleting {
+  will-change: transform, opacity;
+  animation: delete-spin 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes delete-spin {
+  0% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+  70% {
+    transform: rotateX(540deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(720deg) scale(0.85);
+    opacity: 0;
+  }
+}
+
 @keyframes card-spin {
   from {
     transform: perspective(900px) rotateX(0deg);
