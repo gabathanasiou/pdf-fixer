@@ -16,6 +16,7 @@ export interface ResultRow {
   setError(message: string, notPdf?: boolean): void
   setClean(pages: number): void
   setFixed(pages: number, issues: number, blob: Blob, name: string): void
+  settled(): Promise<void>
   destroy(): void
 }
 
@@ -43,12 +44,27 @@ export function ResultRow(name: string): ResultRow {
   let state: RowState = { kind: 'busy', repairing: false }
   let downloadUrl: string | undefined
   let donePlayed = false
+  let settle: Promise<void> = Promise.resolve()
 
   function playDone(kind: 'fixed' | 'clean' | 'error'): void {
     if (donePlayed) return
     donePlayed = true
     root.classList.add(`anim-${kind}`)
-    root.addEventListener('animationend', () => (root.style.willChange = 'auto'), { once: true })
+
+    const animation = new Promise<void>((resolve) => {
+      root.addEventListener(
+        'animationend',
+        () => {
+          root.style.willChange = 'auto'
+          resolve()
+        },
+        { once: true },
+      )
+    })
+    const soundMs = kind === 'fixed' ? 1500 : kind === 'clean' ? 950 : 450
+    const sound = new Promise<void>((resolve) => setTimeout(resolve, soundMs))
+    settle = Promise.all([animation, sound]).then(() => undefined)
+
     if (kind === 'fixed') {
       success()
       confetti(root)
@@ -152,6 +168,9 @@ export function ResultRow(name: string): ResultRow {
     setFixed(pages, issues, blob, name) {
       state = { kind: 'fixed', pages, issues, blob, name }
       render()
+    },
+    settled() {
+      return settle
     },
     destroy() {
       unsubscribe()

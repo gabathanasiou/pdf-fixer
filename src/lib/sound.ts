@@ -106,6 +106,11 @@ export function chord(): void {
   tone(note(root, 7), 0, 0.3, 'sine', 0.045)
 }
 
+export function lead(): void {
+  const degree = PROGRESSION[progression % PROGRESSION.length]
+  tone(note(rootOf(degree), 7), 0, 0.28, 'sine', 0.035)
+}
+
 export function tick(): void {
   tone(nextRoot(), 0, 0.05, 'sine', 0.03)
 }

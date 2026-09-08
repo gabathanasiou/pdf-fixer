@@ -5,7 +5,7 @@ import { Header } from './components/header'
 import { InfoDialog } from './components/info-dialog'
 import { Intro } from './components/intro'
 import { ResultList } from './components/result-list'
-import { applyStatic, getLang, t } from './i18n'
+import { applyStatic, getLang, onLangChange, t } from './i18n'
 import { triggerDownload } from './lib/download'
 import { el } from './lib/dom'
 import { repairPdf } from './lib/repair'
@@ -17,17 +17,35 @@ const list = ResultList()
 const auto = AutoDownload()
 const info = InfoDialog()
 
+let queueCount = 0
+const queue = el('span', { class: 'queue', attrs: { hidden: '' } })
+
+function updateQueue(count: number): void {
+  queueCount = count
+  queue.hidden = count <= 0
+  if (count > 0) {
+    queue.textContent = t('queue', { count })
+    queue.animate([{ transform: 'scale(0.7)' }, { transform: 'scale(1)' }], {
+      duration: 320,
+      easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+    })
+  }
+}
+
 const inputPanel = el('section', { class: 'panel panel-input' }, [
   Intro(),
   DropZone(handleFiles),
   auto.el,
 ])
 const outputPanel = el('section', { class: 'panel panel-output' }, [
-  el('h2', {
-    class: 'panel-title',
-    text: t('resultsTitle'),
-    attrs: { 'data-i18n': 'resultsTitle' },
-  }),
+  el('div', { class: 'panel-head' }, [
+    el('h2', {
+      class: 'panel-title',
+      text: t('resultsTitle'),
+      attrs: { 'data-i18n': 'resultsTitle' },
+    }),
+    queue,
+  ]),
   list.el,
 ])
 
@@ -39,26 +57,29 @@ mount.append(
 
 document.documentElement.lang = getLang()
 applyStatic()
+onLangChange(() => updateQueue(queueCount))
 
 function handleFiles(files: FileList | Iterable<File>): void {
   const pdfs = Array.from(files).filter((f) => f.name.toLowerCase().endsWith('.pdf'))
   if (pdfs.length === 0) return
   void (async () => {
-    for (const file of pdfs) {
-      await fixOne(file)
-      await new Promise((resolve) => setTimeout(resolve, 30))
+    for (let i = 0; i < pdfs.length; i++) {
+      updateQueue(pdfs.length - i - 1)
+      await fixOne(pdfs[i])
     }
+    updateQueue(0)
   })()
 }
 
 async function fixOne(file: File): Promise<void> {
-  const row = list.add(file.name)
+  const row = list.add(file.name, queue)
   row.setBusy()
 
   const result = await repairPdf(file)
 
   if (result.status === 'error') {
     row.setError(result.message, result.notPdf)
+    await row.settled()
     return
   }
 
@@ -70,6 +91,8 @@ async function fixOne(file: File): Promise<void> {
     row.setFixed(result.pages, result.issues, result.blob, result.name)
     if (auto.isChecked()) triggerDownload(result.blob, result.name)
   }
+
+  await row.settled()
 }
 
 window.__pdfFixerReady = true

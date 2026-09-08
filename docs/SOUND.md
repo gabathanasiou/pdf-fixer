@@ -56,6 +56,9 @@ function tone(freq, at, dur, type = 'sine', peak = 0.05) {
   (5th, 3rd, root) with the last held.
 - **Incidental sounds** (`pop`, `tick`, `error`) cycle the scale via `nextRoot()`
   so they are musical but independent of the card key.
+- **Lead-in**: pressing the drop zone plays the fifth of the *upcoming* add-card
+  chord (`lead()` peeks at the progression without advancing), so the picker
+  "asks" and the chord "answers".
 
 ## Worked example
 

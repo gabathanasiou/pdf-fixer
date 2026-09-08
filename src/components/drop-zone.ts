@@ -1,5 +1,6 @@
 import { t } from '../i18n'
 import { el } from '../lib/dom'
+import { lead } from '../lib/sound'
 
 export type FilesHandler = (files: FileList | Iterable<File>) => void
 
@@ -26,10 +27,15 @@ export function DropZone(onFiles: FilesHandler): HTMLElement {
         'aria-label': t('dropAria'),
       },
       on: {
-        click: () => input.click(),
+        click: (event) => {
+          if (event.target === input) return
+          lead()
+          input.click()
+        },
         keydown: (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
+            lead()
             input.click()
           }
         },
