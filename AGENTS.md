@@ -13,7 +13,7 @@ file before changing code; deeper manuals live in `docs/`.
 - `npm run smoke` - Node-level MuPDF check on `~/Downloads/Broken.pdf`
   (`scripts/smoke.mjs`); writes `/tmp/mupdf-fixed.pdf`.
 - **`npm run sound`** - SFX check (`scripts/sound-test.mjs`, Playwright against
-  `dist/`): asserts the global I-IV-V (octave-up) progression, result advance, and cursor. Needs a
+  `dist/`): asserts both SFX presets (simple I-IV-V / rich I-vi-IV-V 7ths), result advance, and cursor. Needs a
   build first. `window.__pdfFixerSound` + a dev-only panel (`sound-debug.ts`) let
   you trigger voices manually.
 - **`npm run build && node scripts/e2e.mjs`** - browser check (Playwright,
@@ -124,7 +124,7 @@ src/lib/download.ts            outputName() / triggerDownload()
 src/lib/confetti.ts            radial celebration burst on completion
 src/lib/history.ts             IndexedDB store for the Recent repairs (cap 5 blobs)
 src/lib/press.ts               press animation + harmonious tap SFX
-src/lib/sound.ts               synthesized Web Audio SFX (one global I-IV-V progression) + mute pref
+src/lib/sound.ts               synthesized Web Audio SFX (simple/rich progression presets) + mute pref
 src/lib/flags.ts               inline SVG flag data URIs (el, en) + otherLang()
 src/lib/icons.ts               inline SVG icons (close, document)
 src/i18n.ts                    el/en catalogs, t(), setLang(), applyStatic()
@@ -140,7 +140,7 @@ scripts/{smoke,e2e,sound-test,og-image}.mjs  Node, Playwright e2e + SFX checks, 
   adding/moving UI or wiring state.
 - `docs/I18N.md` - locales, `t()`/`data-i18n`, adding a language. Read before
   touching any user-facing string.
-- `docs/SOUND.md` - the synthesized SFX, the one global I-IV-V (octave-up) progression, and how
+- `docs/SOUND.md` - the synthesized SFX, the simple/rich progression presets, and how
   every voice advances the cursor. Read before changing audio or reusing it elsewhere.
 - Doc budget: `AGENTS.md` stays under ~200 lines (loaded every session);
   `docs/*.md` under ~200. Prefer `file:line` pointers over prose; move detail

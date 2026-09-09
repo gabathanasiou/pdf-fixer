@@ -7,11 +7,13 @@ Status: read before changing any SFX, or before lifting this into another projec
 1. **Everything is synthesized at runtime** with the Web Audio API. No audio files,
    no network requests, no dependencies (`src/lib/sound.ts`).
 2. **One global cursor ties the app together.** Every interaction advances a single
-   position in one chord progression; the whole UI plays one continuous piece.
+   position in the active preset's progression; the whole UI plays one continuous piece.
 3. **Every voice plays the next step.** `nextChord()` hands out the current chord and
    advances, so any interaction (card, tap, checkbox, result) moves the progression
-   forward and never repeats a pitch until the 6-step loop wraps.
-4. **Audio is polite.** It unlocks on the first user gesture, can be muted, and the
+   forward and never repeats a chord until the loop wraps.
+4. **Two presets.** `simple` (default) is the original I-IV-V triads + octave up with
+   root+fifth single notes; `rich` is I-vi-IV-V with 7ths and a chord-tone melody.
+5. **Audio is polite.** It unlocks on the first user gesture, can be muted, and the
    mute preference is persisted in `pdf-fixer:sound`.
 
 ## Pitch system (the reusable core)
@@ -40,59 +42,96 @@ function tone(freq, at, dur, type = 'sine', peak = 0.05) {
 
 ## The progression
 
-I - IV - V in C, then the same an octave higher:
+Two presets live in `PRESETS` (`src/lib/sound.ts`); the default is `simple`.
+
+**`simple`** (default, most consonant) — I-IV-V triads, then the same an octave up:
 
 ```ts
-const PROGRESSION = [
-  { root: 0, third: 4 },  // I  C
-  { root: 5, third: 4 },  // IV F
-  { root: 7, third: 4 },  // V  G
-  { root: 12, third: 4 }, // I  C'
-  { root: 17, third: 4 }, // IV F'
-  { root: 19, third: 4 }, // V  G'
+const simple = [
+  { root: 0, third: 4 }, // I  C
+  { root: 5, third: 4 }, // IV F
+  { root: 7, third: 4 }, // V  G
+  { root: 12, third: 4 }, // I'
+  { root: 17, third: 4 }, // IV'
+  { root: 19, third: 4 }, // V'
 ]
 ```
 
-- `third` is 4 for major, 3 for minor; roots > 11 are the same chords an octave up.
-- `nextChord()` returns the current step, records it in `lastChord`, and advances
-  `cursor` (mod length). The 6-step loop rises an octave, then drops back to C.
+**`rich`** — the classic I-vi-IV-V turnaround with 7th chords, then an octave up:
+
+```ts
+const rich = [
+  { root: 0, third: 4, seventh: 11 }, // Imaj7   Cmaj7
+  { root: 9, third: 3, seventh: 10 }, // vi7     Am7
+  { root: 5, third: 4, seventh: 11 }, // IVmaj7  Fmaj7
+  { root: 7, third: 4, seventh: 10 }, // V7      G7
+  { root: 12, third: 4, seventh: 11 }, // Imaj7'
+  { root: 21, third: 3, seventh: 10 }, // vi7'
+  { root: 17, third: 4, seventh: 11 }, // IVmaj7'
+  { root: 19, third: 4, seventh: 10 }, // V7'
+]
+```
+
+- `third` is 4 for major, 3 for minor; `seventh` is 11 (major 7th) or 10 (minor/dominant).
+- Roots > 11 are the same chords an octave up, so the loop rises then resets.
+- `nextChord()` returns the current step, records it in `lastChord`, and advances `cursor`.
+- `nextTone()` rotates the chord tones; only `rich` uses it for single-note voices.
 - `currentChord()` peeks without advancing (used by `lead()`).
-- `lastChord` is simply the most recently played chord (shown in the debug panel).
+- `strum()` staggers chord voices ~12ms apart (+ jitter) so chords roll like a
+  hand-played chord instead of hitting the speaker all at once.
 
 ## Voices
 
 | fn | shape | advances cursor |
 |---|---|---|
-| `chord()` | triad (+7th) on `nextChord()` | yes |
-| `success()` | opening chord, arpeggio `[0, third, 7, 12, +third, 19]`, held chord | yes |
+| `chord()` | full chord (root, 3rd, 5th, +7th when the preset has one) | yes |
+| `success()` | chord + rising arpeggio over its tones, held | yes |
 | `clean()` | descending `[5th, third, root]` | yes |
-| `error()` | descending triangle `[5th, third]` | yes |
-| `tap()` | root + fifth together, short (default "anything interactable") | yes |
-| `tick()` | single root note, short | yes |
-| `pop()` | two-note blip (played when sound is enabled) | yes |
-| `flip(on)` | on: root→fifth; off: fifth→root (checkbox) | yes |
-| `lead()` | fifth of `currentChord()`, no advance (drop-zone "ask") | no |
+| `error()` | descending triangle `[5th, third]` (falling = negative) | yes |
+| `tap()` | simple: root+fifth; rich: two chord tones (default "anything") | yes |
+| `tick()` | simple: root; rich: one chord tone, short | yes |
+| `pop()` | two rising tones (played when sound is enabled) | yes |
+| `flip(on)` | on: rising; off: falling (checkbox) | yes |
+| `lead()` | simple: 5th; rich: 3rd of `currentChord()` (drop-zone "ask") | no |
 
-Every voice except `lead()` calls `nextChord()`, so the pitch changes on every
-interaction. Result voices only differ in shape (arpeggio / descending / triangle).
+Every voice except `lead()` calls `nextChord()`, so the chord changes on every
+interaction. In `rich`, single-note voices also rotate through chord tones (`nextTone`).
 
 Every interactable routes through this module: add-card (`result-list.ts`),
 result (`result-row.ts`), download links, header info/lang, sound toggle,
 auto-download checkbox (`flip`), drop zone (`lead`/`tick`), history buttons
 (`press()` → `tap()`), and every dialog button/backdrop (`tick`/`tap`).
 
+## Design principles (from UI-sound practice)
+
+Synthesized from Material/Google sound guidance, uisfx.com and violetrecording:
+
+- **Short and quiet.** Taps/ticks are 50–120ms; success/clean stay ~1s or less.
+  Cues sit under speech and never block the next action.
+- **One tonal family.** Sine voices, one key, one envelope — the app feels like one
+  product (the "Super G" palette idea).
+- **Rising = positive, falling = negative.** `success`/`flip(on)` rise; `error`/
+  `flip(off)` fall. Contrast is by direction and timbre, not loudness.
+- **Hierarchy.** Frequent cues are tiny; rare outcomes (success/error) carry shape.
+- **Melody from chord tones (rich preset).** Single notes arpeggiate the chord; the
+  same idea as Google's Guided Frame (IV→V→I tension and resolution).
+- **Restraint & accessibility.** Sound always has a visual equivalent, is mutable,
+  and the preference persists; nothing depends on audio.
+
 ## Debug & test
 
 - `window.__pdfFixerSound` is always attached (`src/lib/sound.ts`):
-  `state()` → `{ cursor, current, last, enabled }`, `play(voice)`, `reset()`,
-  plus `progression` and `voices`. Try it in the iPad console:
-  `__pdfFixerSound.play('chord')`.
+  `state()` → `{ cursor, current, last, enabled, preset }`, `play(voice)`, `reset()`,
+  `getPreset()` / `setPreset('simple' | 'rich')`, plus `presets` and `voices`.
+  Try it in the iPad console: `__pdfFixerSound.setPreset('rich')`.
 - In dev only, a floating panel (`src/components/sound-debug.ts`, mounted in
-  `src/main.ts` behind `import.meta.env.DEV`) has one button per voice and a live
-  readout of cursor/current/last. It never ships to production.
+  `src/main.ts` behind `import.meta.env.DEV`) has a `simple`/`rich` switch, one
+  button per voice, and a live readout. It never ships to production.
+- The chosen preset persists in `pdf-fixer:sound-preset`.
 - `npm run sound` (`scripts/sound-test.mjs`, Playwright against `dist/`) spies on
-  `AudioContext.prototype.createOscillator`, asserts the 6-step I-IV-V (octave up)
-  order, that results play the next chord, and that the cursor advances/resets.
+  `AudioContext.prototype.createOscillator` and checks both presets: simple order +
+  root+fifth single notes, rich 7th-chord order + chord-tone variety, result advance,
+  and cursor advance/reset.
 
 ## Verification checklist
 

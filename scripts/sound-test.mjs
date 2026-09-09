@@ -11,7 +11,8 @@ const port = Number(process.env.PORT ?? 4784)
 if (!existsSync(dist)) throw new Error('dist not built, run npm run build first')
 
 const ROOT_FREQ = 261.63
-const EXPECTED = [0, 5, 7, 12, 17, 19]
+const SIMPLE = [0, 5, 7, 12, 17, 19]
+const RICH = [0, 9, 5, 7, 12, 21, 17, 19]
 
 const failures = []
 function check(name, ok, detail = '') {
@@ -20,6 +21,7 @@ function check(name, ok, detail = '') {
 }
 
 const semitones = (freq) => Math.round(12 * Math.log2(freq / ROOT_FREQ))
+const pitchClass = (freq) => ((semitones(freq) % 12) + 12) % 12
 
 const server = spawn('python3', ['-m', 'http.server', String(port), '--bind', '127.0.0.1'], {
   cwd: dist,
@@ -57,27 +59,59 @@ try {
     return page.evaluate(() => [...window.__sfxFreqs])
   }
 
-  const roots = []
-  for (let i = 0; i < EXPECTED.length; i++) {
-    const freqs = await play('chord')
-    check(`chord ${i + 1} voiced`, freqs.length >= 3, `${freqs.length} tones`)
-    roots.push(semitones(Math.min(...freqs)))
+  async function rootsFor(expected) {
+    const roots = []
+    for (let i = 0; i < expected.length; i++) {
+      const freqs = await play('chord')
+      check(`chord ${i + 1} voiced`, freqs.length >= 3, `${freqs.length} tones`)
+      roots.push(semitones(Math.min(...freqs)))
+    }
+    return roots
   }
+
+  const initial = await page.evaluate(() => window.__pdfFixerSound.getPreset())
+  check('default preset is simple', initial === 'simple', initial)
+
+  const simpleRoots = await rootsFor(SIMPLE)
   check(
-    'I-IV-V (then octave up) order',
-    JSON.stringify(roots) === JSON.stringify(EXPECTED),
-    `got [${roots}], want [${EXPECTED}]`,
+    'simple I-IV-V (octave up) order',
+    JSON.stringify(simpleRoots) === JSON.stringify(SIMPLE),
+    `got [${simpleRoots}], want [${SIMPLE}]`,
+  )
+
+  await page.evaluate(() => window.__pdfFixerSound.setPreset('rich'))
+  const richRoots = await rootsFor(RICH)
+  check(
+    'rich I-vi-IV-V 7ths (octave up) order',
+    JSON.stringify(richRoots) === JSON.stringify(RICH),
+    `got [${richRoots}], want [${RICH}]`,
   )
 
   await page.evaluate(() => window.__pdfFixerSound.reset())
   const cardFreqs = await play('chord')
-  const cardRoot = Math.min(...cardFreqs)
   const successFreqs = await play('success')
-  const successRoot = Math.min(...successFreqs)
   check(
     'result plays next chord',
-    semitones(cardRoot) === EXPECTED[0] && semitones(successRoot) === EXPECTED[1],
-    `card ${semitones(cardRoot)}, result ${semitones(successRoot)}`,
+    semitones(Math.min(...cardFreqs)) === RICH[0] &&
+      semitones(Math.min(...successFreqs)) === RICH[1],
+    `card ${semitones(Math.min(...cardFreqs))}, result ${semitones(Math.min(...successFreqs))}`,
+  )
+
+  const variety = new Set()
+  for (let i = 0; i < 8; i++) {
+    const freqs = await play('tap')
+    for (const freq of freqs) variety.add(semitones(freq))
+  }
+  check('rich single notes vary (chord tones)', variety.size >= 5, `${variety.size} distinct pitches`)
+
+  await page.evaluate(() => window.__pdfFixerSound.setPreset('simple'))
+  await page.evaluate(() => window.__pdfFixerSound.reset())
+  const tapFreqs = await play('tap')
+  const classes = [...new Set(tapFreqs.map(pitchClass))].sort((a, b) => a - b)
+  check(
+    'simple single note is root+fifth',
+    JSON.stringify(classes) === JSON.stringify([0, 7]),
+    `got [${classes}]`,
   )
 
   await page.evaluate(() => window.__pdfFixerSound.reset())
